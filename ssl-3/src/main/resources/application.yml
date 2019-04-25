@@ -1,0 +1,17 @@
+server:
+  port: 3333
+  ssl:
+    client-auth: NEED # Client authentication mode.
+    enabled: true # Whether to enable SSL support.
+    enabled-protocols: TLSv1.2 # Enabled SSL protocols.
+    key-alias: keystore # Alias that identifies the key in the key store.
+    key-password: password # Password used to access the key in the key store.
+    key-store: classpath:keystore-restemplate.jks # Path to the key store that holds the SSL certificate (typically a jks file).
+    key-store-password: password # Password used to access the key store.
+    #key-store-provider: sun # Provider for the key store.
+    key-store-type: jks # Type of the key store.
+    protocol: TLS # SSL protocol to use.
+    trust-store: classpath:truststore-restemplate.jks # Trust store that holds SSL certificates.
+    trust-store-password: password # Password used to access the trust store.
+    #trust-store-provider: sun # Provider for the trust store.
+    trust-store-type: jks # Type of the trust store.

@@ -1,0 +1,124 @@
+Converting a Java Keystore into PEM Format and other format:
+
+//////////////////////////////////////////////////////////
+	  keytool -genkey -keyalg RSA -alias keystore -keypass password -keystore keystore-restemplate.jks -storepass password -validity 20000
+bash$ keytool -keystore foo.jks -genkeypair -alias foo -dname "CN=foo.example.com,L=Melbourne,ST=Victoria,C=AU"
+Enter keystore password:  
+Re-enter new password: 
+Enter key password for 
+        (RETURN if same as keystore password):  
+		
+bash$ keytool -keystore foo.jks -exportcert -alias foo | openssl x509 -inform der -text
+Enter keystore password:  asdasd
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1237334757 (0x49c03ae5)
+        Signature Algorithm: dsaWithSHA1
+        Issuer: C=AU, ST=Victoria, L=Melbourne, CN=foo.example.com
+        Validity
+            Not Before: Mar 18 00:05:57 2009 GMT
+            Not After : Jun 16 00:05:57 2009 GMT
+        Subject: C=AU, ST=Victoria, L=Melbourne, CN=foo.example.com
+        Subject Public Key Info:
+            Public Key Algorithm: dsaEncryption
+            DSA Public Key:
+                pub: 
+                    00:e2:66:5c:e0:2e:da:e0:6b:a6:aa:97:64:59:14:
+                    7e:a6:2e:5a:45:f9:2f:b5:2d:f4:34:27:e6:53:c7: 
+
+bash$ keytool -importkeystore -srckeystore foo.jks -destkeystore foo.p12 -srcstoretype jks -deststoretype pkcs12
+Enter destination keystore password:  
+Re-enter new password: 
+Enter source keystore password:  
+Entry for alias foo successfully imported.
+Import command completed:  1 entries successfully imported, 0 entries failed or cancelled
+
+bash$ openssl pkcs12 -in foo.p12 -out foo.pem
+Enter Import Password:
+MAC verified OK
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+
+bash$ openssl x509 -text -in foo.pem
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1237334757 (0x49c03ae5)
+        Signature Algorithm: dsaWithSHA1
+        Issuer: C=AU, ST=Victoria, L=Melbourne, CN=foo.example.com
+        Validity
+            Not Before: Mar 18 00:05:57 2009 GMT
+            Not After : Jun 16 00:05:57 2009 GMT
+        Subject: C=AU, ST=Victoria, L=Melbourne, CN=foo.example.com
+        Subject Public Key Info:
+            Public Key Algorithm: dsaEncryption
+            DSA Public Key:
+                pub: 
+                    00:e2:66:5c:e0:2e:da:e0:6b:a6:aa:97:64:59:14:
+                    7e:a6:2e:5a:45:f9:2f:b5:2d:f4:34:27:e6:53:c7:
+ 
+
+bash$ openssl dsa -text -in foo.pem
+read DSA key
+Enter PEM pass phrase:
+Private-Key: (1024 bit)
+priv:
+    00:8f:b1:af:55:63:92:7c:d2:0f:e6:f3:a2:f5:ff:
+    1a:7a:fe:8c:39:dd
+pub: 
+    00:e2:66:5c:e0:2e:da:e0:6b:a6:aa:97:64:59:14:
+    7e:a6:2e:5a:45:f9:2f:b5:2d:f4:34:27:e6:53:c7:
+
+bash$ keytool -importkeystore -srckeystore keystore.jks -destkeystore keystore.p12 -srcstoretype JKS -deststoretype PKCS12 -deststorepass password -srcstorepass password -srcalias keystore -destalias keystore
+	
+bash$ keytool -importkeystore -srckeystore foo.jks -destkeystore foo.p12 -srcstoretype jks -deststoretype pkcs12
+
+bash$ openssl pkcs12 -in keystore.p12 -nocerts -nodes -out my_store.key
+
+bash$ openssl pkcs12 -in keystore.p12 -nokeys -out my_key_store.crt
+
+bash$ keytool -export -alias mydomain -file mydomain.der -keystore mycert.jks
+	
+bash$ openssl x509 -outform der -in your-cert.pem -out your-cert.crt
+
+bash$ openssl x509 -inform der -in mydomain.der -out certificate.pem
+
+============================================================================================
+
+You end up with:
+
+foo.jks - keystore in java format.
+foo.p12 - keystore in PKCS#12 format.
+foo.pem - all keys and certs from keystore, in PEM format.
+(This last file can be split up into keys and certificates if you like.)
+
+Command summary - to create JKS keystore:
+
+keytool -keystore foo.jks -genkeypair -alias foo \
+    -dname 'CN=foo.example.com,L=Melbourne,ST=Victoria,C=AU'
+Command summary - to convert JKS keystore into PKCS#12 keystore, then into PEM file:
+
+keytool -importkeystore -srckeystore foo.jks \
+   -destkeystore foo.p12 \
+   -srcstoretype jks \
+   -deststoretype pkcs12
+
+openssl pkcs12 -in foo.p12 -out foo.pem
+if you have more than one certificate in your JKS keystore, and you want to only export the certificate and key associated with one of the aliases, you can use the following variation:
+
+keytool -importkeystore -srckeystore foo.jks \
+   -destkeystore foo.p12 \
+   -srcalias foo \
+   -srcstoretype jks \
+   -deststoretype pkcs12
+
+openssl pkcs12 -in foo.p12 -out foo.pem
+Command summary - to compare JKS keystore to PEM file:
+
+keytool -keystore foo.jks -exportcert -alias foo | \
+   openssl x509 -inform der -text
+
+openssl x509 -text -in foo.pem
+
+openssl dsa -text -in foo.pem
